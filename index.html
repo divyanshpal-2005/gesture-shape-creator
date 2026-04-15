@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gesture Shape Creator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="scanlines"></div>
+
+<div id="splash">
+  <div class="splash-logo">GESTURE SHAPE CREATOR</div>
+  <div class="splash-title">Control with your<br><span>bare hands</span></div>
+  <div class="splash-sub">No controllers · No code · Just gestures</div>
+  <div class="splash-gestures">
+    <div class="splash-g"><div class="sg-icon">🖐</div><div class="sg-name">Open Hand</div><div class="sg-desc">Spawn shape</div></div>
+    <div class="splash-g"><div class="sg-icon">✊</div><div class="sg-name">Fist</div><div class="sg-desc">Grab &amp; throw</div></div>
+    <div class="splash-g"><div class="sg-icon">☝️</div><div class="sg-name">Point</div><div class="sg-desc">Free draw</div></div>
+    <div class="splash-g"><div class="sg-icon">✌️</div><div class="sg-name">Peace / V</div><div class="sg-desc">Clear all</div></div>
+  </div>
+  <button class="splash-btn" id="splash-start">Allow Camera &amp; Start →</button>
+  <div class="splash-hint">Requires webcam access · Works best in good lighting</div>
+</div>
+
+<div id="cam-error">
+  <div class="error-icon">📷</div>
+  <div class="error-title">Camera Access Denied</div>
+  <div class="error-msg">This app needs webcam access to detect hand gestures.<br>Please allow camera permission in your browser settings and try again.</div>
+  <button class="retry-btn" id="retry-btn">Try Again</button>
+</div>
+
+<header>
+  <div class="logo">GESTURE SHAPE CREATOR</div>
+  <div class="header-right">
+    <span class="badge live" id="cam-badge">CAMERA</span>
+    <span class="badge">MEDIAPIPE</span>
+    <span class="badge">SHAPES + COLOUR</span>
+    <div class="help-btn" id="help-btn" title="Show guide">?</div>
+  </div>
+</header>
+
+<main>
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
+  <div class="gesture-announce" id="gesture-announce"></div>
+
+  <div class="left-panel">
+    <p class="panel-title">SPAWN SHAPE</p>
+    <div class="shape-grid" id="shapeGrid">
+      <button class="shape-btn active" data-shape="sphere"><span class="s-icon">⬤</span> SPHERE</button>
+      <button class="shape-btn" data-shape="cube"><span class="s-icon">⬛</span> CUBE</button>
+      <button class="shape-btn" data-shape="cone"><span class="s-icon">🔺</span> CONE</button>
+      <button class="shape-btn" data-shape="star"><span class="s-icon">⭐</span> STAR</button>
+      <button class="shape-btn" data-shape="diamond"><span class="s-icon">💠</span> DIAMOND</button>
+      <button class="shape-btn" data-shape="hexagon"><span class="s-icon">⬡</span> HEXAGON</button>
+      <button class="shape-btn" data-shape="ring"><span class="s-icon">◯</span> RING</button>
+      <button class="shape-btn" data-shape="cross"><span class="s-icon">✚</span> CROSS</button>
+    </div>
+
+    <div class="size-section">
+      <div class="size-row">
+        <span class="color-label" style="margin-bottom:0;">SHAPE SIZE</span>
+        <span class="size-val" id="size-val">56px</span>
+      </div>
+      <input type="range" id="sizeSlider" min="24" max="100" value="56" step="4" />
+    </div>
+
+    <p class="color-label">SHAPE COLOUR</p>
+    <div class="color-swatches" id="shapeSwatches">
+      <div class="swatch active" style="background:#06b6d4;" data-color="#06b6d4"></div>
+      <div class="swatch" style="background:#7c3aed;" data-color="#7c3aed"></div>
+      <div class="swatch" style="background:#10b981;" data-color="#10b981"></div>
+      <div class="swatch" style="background:#f59e0b;" data-color="#f59e0b"></div>
+      <div class="swatch" style="background:#ec4899;" data-color="#ec4899"></div>
+      <div class="swatch" style="background:#ef4444;" data-color="#ef4444"></div>
+      <div class="swatch" style="background:#ff6d00;" data-color="#ff6d00"></div>
+      <div class="swatch" style="background:#ffffff;" data-color="#ffffff"></div>
+    </div>
+    <div class="custom-color-wrap">
+      <input type="color" id="customShapeColor" value="#06b6d4" />
+      <label for="customShapeColor">CUSTOM SHAPE</label>
+    </div>
+
+    <div class="draw-color-wrap">
+      <p class="color-label">DRAW COLOUR</p>
+      <div class="color-swatches" id="drawSwatches">
+        <div class="swatch active" style="background:#ff00ff;" data-color="#ff00ff"></div>
+        <div class="swatch" style="background:#00ffff;" data-color="#00ffff"></div>
+        <div class="swatch" style="background:#ffff00;" data-color="#ffff00"></div>
+        <div class="swatch" style="background:#ff6d00;" data-color="#ff6d00"></div>
+        <div class="swatch" style="background:#ffffff;" data-color="#ffffff"></div>
+        <div class="swatch" style="background:#10b981;" data-color="#10b981"></div>
+      </div>
+      <div class="custom-color-wrap">
+        <input type="color" id="customDrawColor" value="#ff00ff" />
+        <label for="customDrawColor">CUSTOM DRAW</label>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn" id="undo-btn" disabled title="Undo last object (Ctrl+Z)">
+        <span class="a-icon">↩️</span> UNDO
+      </button>
+      <button class="action-btn" id="undo-draw-btn" disabled title="Undo last stroke">
+        <span class="a-icon">✏️</span> UNSTROKE
+      </button>
+      <button class="action-btn danger" id="clear-btn" title="Clear all (C)">
+        <span class="a-icon">🗑️</span> CLEAR
+      </button>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <p class="panel-title">GESTURE GUIDE</p>
+    <div class="gesture-row"><span class="gesture-icon">🖐</span><div><div class="gesture-name">Open Hand</div><div class="gesture-desc">spawn selected shape</div></div></div>
+    <div class="gesture-row"><span class="gesture-icon">✊</span><div><div class="gesture-name">Fist (near obj)</div><div class="gesture-desc">grab &amp; throw</div></div></div>
+    <div class="gesture-row"><span class="gesture-icon">☝️</span><div><div class="gesture-name">Index Finger Up</div><div class="gesture-desc">FREE DRAW mode</div></div></div>
+    <div class="gesture-row"><span class="gesture-icon">✌️</span><div><div class="gesture-name">Peace / V</div><div class="gesture-desc">clear all</div></div></div>
+
+    <div class="confidence-wrap">
+      <div class="conf-label-row">
+        <span class="panel-title" style="margin:0;">HAND CONFIDENCE</span>
+        <span id="conf-val" style="font-size:10px;font-family:'Space Mono',monospace;color:var(--accent-green);">–</span>
+      </div>
+      <div class="conf-bar-track"><div class="conf-bar-fill" id="conf-bar"></div></div>
+    </div>
+
+    <div class="shortcuts-wrap">
+      <p class="panel-title" style="margin-bottom:6px;">KEYBOARD SHORTCUTS</p>
+      <div class="shortcut-row"><span class="shortcut-desc">Undo object</span><span class="shortcut-key">Ctrl+Z</span></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Clear all</span><span class="shortcut-key">C</span></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Cycle shapes</span><span class="shortcut-key">← →</span></div>
+      <div class="shortcut-row"><span class="shortcut-desc">Hide panels</span><span class="shortcut-key">H</span></div>
+    </div>
+  </div>
+
+  <div class="hud-bar">
+    <div class="hud-pill" id="pill-mode"><span class="label">MODE</span><span class="value" id="gesture-val">READY</span></div>
+    <div class="hud-pill"><span class="label">SHAPE</span><span class="value" id="shape-val">SPHERE</span></div>
+    <div class="hud-pill"><span class="label">SIZE</span><span class="value" id="size-hud">56</span></div>
+    <div class="hud-pill"><span class="label">SHAPE CLR</span><span class="color-dot" id="shape-color-dot"></span></div>
+    <div class="hud-pill"><span class="label">DRAW CLR</span><span class="color-dot" id="draw-color-dot"></span></div>
+    <div class="hud-pill"><span class="label">OBJECTS</span><span class="value" id="obj-count">0</span></div>
+    <div class="hud-pill"><span class="label">FPS</span><span class="value" id="fps-val">–</span></div>
+  </div>
+
+  <div class="status-bar">
+    <div id="status-dot" style="background:#f59e0b;"></div>
+    <span id="status-text" style="font-size:12px;font-family:'Space Mono',monospace;">Waiting to start…</span>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
